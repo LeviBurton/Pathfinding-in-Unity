@@ -94,4 +94,23 @@ public class Graph : MonoBehaviour
     {
         return GetNeighbors(x, y, nodes, allDirections);
     }
+
+    public float GetNodeDistance(Node source, Node target)
+    {
+        int dx = Mathf.Abs(source.xIndex - target.xIndex);
+        int dy = Mathf.Abs(source.yIndex - target.yIndex);
+
+        // the min of the deltas is the diagonal steps
+        int min = Mathf.Min(dx, dy);
+
+        // the max of the deltas is used to calculate the straight steps,
+        // which is just max - min 
+        int max = Mathf.Max(dx, dy);
+
+        int diagonalSteps = min;
+        int straightSteps = max - min;
+
+        // diagonal steps cost 1.4, straight steps cost 1.
+        return 1.4f * diagonalSteps + straightSteps;
+    }
 }

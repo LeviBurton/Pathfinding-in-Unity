@@ -10,7 +10,7 @@ public class Pathfinder : MonoBehaviour
     Graph m_graph;
     GraphView m_graphView;
 
-    Queue<Node> m_frontierNodes;
+    PriorityQueue<Node> m_frontierNodes;
     List<Node> m_exploredNodes;
     List<Node> m_pathNodes;
 
@@ -21,10 +21,19 @@ public class Pathfinder : MonoBehaviour
     public Color pathColor = Color.cyan;
     public Color arrowColor = new Color(0.85f, 0.85f, 0.85f, 1f);
     public Color highlightColor = new Color(1f, 1f, 0.5f, 1f);
-
+    public bool showIterations = true;
+    public bool showColors = true;
+    public bool showArrows = true;
+    public bool exitOnGoal = true;
     public bool isComplete = false;
-    int m_iterations = 0;
+    public Mode mode = Mode.BreadFirstSearch;
 
+    int m_iterations = 0;
+    public enum Mode
+    {
+        BreadFirstSearch = 0,
+        Dijkstra = 1
+    }
 
 
     public void Init(Graph graph, GraphView graphView, Node start, Node goal)
@@ -48,7 +57,7 @@ public class Pathfinder : MonoBehaviour
 
         ShowColors(graphView, start, goal);
 
-        m_frontierNodes = new Queue<Node>();
+        m_frontierNodes = new PriorityQueue<Node>();
         m_frontierNodes.Enqueue(start);
         m_exploredNodes = new List<Node>();
         m_pathNodes = new List<Node>();
@@ -63,6 +72,8 @@ public class Pathfinder : MonoBehaviour
 
         isComplete = false;
         m_iterations = 0;
+        m_startNode.distanceTraveled = 0;
+
     }
 
     void ShowColors()
@@ -108,6 +119,8 @@ public class Pathfinder : MonoBehaviour
 
     public IEnumerator SearchRoutine(float timeStep = 0.1f)
     {
+        float timeStart = Time.time;
+
         yield return null;
 
         while (!isComplete)
@@ -122,34 +135,91 @@ public class Pathfinder : MonoBehaviour
                     m_exploredNodes.Add(currentNode);
                 }
 
-                ExpandFrontier(currentNode);
+                if (mode == Mode.BreadFirstSearch)
+                {
+                    ExpandFrontierBreadthFirst(currentNode);
+                }
+                else if (mode == Mode.Dijkstra)
+                {
+                    ExpandFrontierDijkstra(currentNode);
+                }
 
                 if (m_frontierNodes.Contains(m_goalNode))
                 {
                     m_pathNodes = GetPathNodes(m_goalNode);
-                }
-
-                ShowColors();
-
-                if (m_graphView)
-                {
-                    m_graphView.ShowNodeArrows(m_frontierNodes.ToList(), arrowColor);
-                    if (m_frontierNodes.Contains(m_goalNode))
+                    if (exitOnGoal)
                     {
-                        m_graphView.ShowNodeArrows(m_pathNodes, highlightColor);
+                        isComplete = true;
+                        Debug.Log("Pathfinder mode: " + mode.ToString() +
+                            "   path length = " + m_goalNode.distanceTraveled.ToString());
                     }
                 }
 
-                yield return new WaitForSeconds(timeStep);
+                if (showIterations)
+                {
+                    ShowDiagnostics();
+
+                    yield return new WaitForSeconds(timeStep);
+                }
             }
             else
             {
                 isComplete = true;
             }
+
+        }
+
+        ShowDiagnostics();
+
+        Debug.Log("Pathfinder SearchRouting: elapse time = " + (Time.time - timeStart).ToString() + " seconds");
+    }
+
+    private void ShowDiagnostics()
+    {
+        if (showColors)
+        {
+            ShowColors();
+        }
+
+        if (m_graphView != null && showArrows == true)
+        {
+            m_graphView.ShowNodeArrows(m_frontierNodes.ToList(), arrowColor);
+            if (m_frontierNodes.Contains(m_goalNode))
+            {
+                m_graphView.ShowNodeArrows(m_pathNodes, highlightColor);
+            }
         }
     }
 
-    void ExpandFrontier(Node node)
+    void ExpandFrontierDijkstra(Node node)
+    {
+        if (node != null)
+        {
+            for (int i = 0; i < node.neighbors.Count; i++)
+            {
+                if (!m_exploredNodes.Contains(node.neighbors[i]))
+                {
+                    float distanceToNeighbor = m_graph.GetNodeDistance(node, node.neighbors[i]);
+                    float newDistanceTraveled = distanceToNeighbor + node.distanceTraveled;
+
+                    if (float.IsPositiveInfinity(node.neighbors[i].distanceTraveled) ||
+                        newDistanceTraveled < node.neighbors[i].distanceTraveled)
+                    {
+                        node.neighbors[i].previous = node;
+                        node.neighbors[i].distanceTraveled = newDistanceTraveled;
+                    }
+
+                    if (!m_frontierNodes.Contains(node.neighbors[i]))
+                    {
+                        node.neighbors[i].priority = (int)node.neighbors[i].distanceTraveled;
+                        m_frontierNodes.Enqueue(node.neighbors[i]);
+                    }
+                }
+            }
+        }
+    }
+
+    void ExpandFrontierBreadthFirst(Node node)
     {
         if (node != null)
         {
@@ -158,7 +228,13 @@ public class Pathfinder : MonoBehaviour
                 if (!m_exploredNodes.Contains(node.neighbors[i]) && 
                     !m_frontierNodes.Contains(node.neighbors[i]))
                 {
+                    float distanceToNeighbor = m_graph.GetNodeDistance(node, node.neighbors[i]);
+                    float newDistanceTraveled = distanceToNeighbor + node.distanceTraveled;
+                    node.neighbors[i].distanceTraveled = newDistanceTraveled;
+               
                     node.neighbors[i].previous = node;
+                    node.neighbors[i].priority = m_exploredNodes.Count;
+
                     m_frontierNodes.Enqueue(node.neighbors[i]);
                 }
             }

@@ -67,6 +67,7 @@
     <Compile Include="Assets\Scripts\Node.cs" />
     <Compile Include="Assets\Scripts\NodeView.cs" />
     <Compile Include="Assets\Scripts\Pathfinder.cs" />
+    <Compile Include="Assets\Scripts\PriorityQueue.cs" />
     <None Include="Assets\Resources\MapData\Level1.txt" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>C:/Projects/Pathfinding in Unity/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
