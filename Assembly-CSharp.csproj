@@ -61,8 +61,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Graph.cs" />
+    <Compile Include="Assets\Scripts\GraphView.cs" />
     <Compile Include="Assets\Scripts\MapData.cs" />
     <Compile Include="Assets\Scripts\Node.cs" />
+    <Compile Include="Assets\Scripts\NodeView.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>C:/Projects/Pathfinding in Unity/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
