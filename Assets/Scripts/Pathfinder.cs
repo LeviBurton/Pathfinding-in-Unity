@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Pathfinder : MonoBehaviour
@@ -18,6 +19,11 @@ public class Pathfinder : MonoBehaviour
     public Color frontierColor = Color.magenta;
     public Color exploredColor = Color.gray;
     public Color pathNodes = Color.cyan;
+
+    public bool isComplete = false;
+    int m_iterations = 0;
+
+
 
     public void Init(Graph graph, GraphView graphView, Node start, Node goal)
     {
@@ -38,6 +44,47 @@ public class Pathfinder : MonoBehaviour
         m_startNode = start;
         m_goalNode = goal;
 
+        ShowColors(graphView, start, goal);
+
+        m_frontierNodes = new Queue<Node>();
+        m_frontierNodes.Enqueue(start);
+        m_exploredNodes = new List<Node>();
+        m_pathNodes = new List<Node>();
+
+        for (int x = 0; x < m_graph.Width; x++)
+        {
+            for (int y = 0; y < m_graph.Height; y++)
+            {
+                m_graph.nodes[x, y].Reset();
+            }
+        }
+
+        isComplete = false;
+        m_iterations = 0;
+    }
+
+    void ShowColors()
+    {
+        ShowColors(m_graphView, m_startNode, m_goalNode);
+    }
+
+    void ShowColors(GraphView graphView, Node start, Node goal)
+    {
+        if (graphView == null || start == null || goal == null)
+        {
+            return;
+        }
+
+        if (m_frontierNodes != null)
+        {
+            graphView.ColorNodes(m_frontierNodes.ToList(), frontierColor);
+        }
+
+        if (m_exploredNodes != null)
+        {
+            graphView.ColorNodes(m_exploredNodes.ToList(), exploredColor);
+        }
+
         NodeView startNodeView = graphView.nodeViews[start.xIndex, start.yIndex];
 
         if (startNodeView != null)
@@ -50,17 +97,48 @@ public class Pathfinder : MonoBehaviour
         {
             goalNodeView.ColorNode(goalColor);
         }
+    }
 
-        m_frontierNodes = new Queue<Node>();
-        m_frontierNodes.Enqueue(start);
-        m_exploredNodes = new List<Node>();
-        m_pathNodes = new List<Node>();
+    public IEnumerator SearchRoutine(float timeStep = 0.1f)
+    {
+        yield return null;
 
-        for (int x = 0; x < m_graph.Width; x++)
+        while (!isComplete)
         {
-            for (int y = 0; y < m_graph.Height; y++)
+            if (m_frontierNodes.Count > 0)
             {
-                m_graph.nodes[x, y].Reset();
+                Node currentNode = m_frontierNodes.Dequeue();
+                m_iterations++;
+
+                if (!m_exploredNodes.Contains(currentNode))
+                {
+                    m_exploredNodes.Add(currentNode);
+                }
+
+                ExpandFrontier(currentNode);
+                ShowColors();
+
+                yield return new WaitForSeconds(timeStep);
+            }
+            else
+            {
+                isComplete = true;
+            }
+        }
+    }
+
+    void ExpandFrontier(Node node)
+    {
+        if (node != null)
+        {
+            for (int i = 0; i< node.neighbors.Count; i++)
+            {
+                if (!m_exploredNodes.Contains(node.neighbors[i]) && 
+                    !m_frontierNodes.Contains(node.neighbors[i]))
+                {
+                    node.neighbors[i].previous = node;
+                    m_frontierNodes.Enqueue(node.neighbors[i]);
+                }
             }
         }
     }

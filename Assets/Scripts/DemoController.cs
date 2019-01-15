@@ -11,6 +11,7 @@ public class DemoController : MonoBehaviour
     public int startY = 0;
     public int goalX = 15;
     public int goalY = 1;
+    public float timeStep = 0.1f;
 
     void Start()
     {
@@ -29,6 +30,7 @@ public class DemoController : MonoBehaviour
                 Node startNode = graph.nodes[startX, startY];
                 Node goalNode = graph.nodes[goalX, goalY];
                 pathfinder.Init(graph, graphView, startNode, goalNode);
+                StartCoroutine(pathfinder.SearchRoutine(timeStep));
             }
         }
     }
