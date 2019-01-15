@@ -1,36 +1,70 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using System;
 
 public class MapData : MonoBehaviour
 {
     public int width = 10;
     public int height = 5;
 
-    void Start()
+    public TextAsset textAsset;
+
+    public List<string> GetTextFromFile(TextAsset tAsset)
     {
-        
+        List<string> lines = new List<string>();
+
+        if (tAsset != null)
+        {
+            string textData = tAsset.text;
+            string[] delimiters = { "\r\n", "\n" };
+            lines.AddRange(textData.Split(delimiters, System.StringSplitOptions.None));
+            lines.Reverse();
+        }
+        else
+        {
+            Debug.LogWarning("MapData GetTextFromFile Error: invalid TextAsset");
+        }
+
+        return lines;
+    }
+
+    public List<string> GetTextFromFile()
+    {
+        return GetTextFromFile(textAsset);
+    }
+
+    public void SetDimensions(List<string> textLines)
+    {
+        height = textLines.Count;
+        foreach (var line in textLines)
+        {
+            if (line.Length > width)
+            {
+                width = line.Length;
+            }
+        }
     }
 
     public int[,] MakeMap()
     {
+        List<string> lines = new List<string>();
+        lines = GetTextFromFile();
+        SetDimensions(lines);
+
         int[,] map = new int[width, height];
 
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
             {
-                map[x, y] = 0;
+                if (lines[y].Length > x)
+                {
+                    map[x, y] = (int)Char.GetNumericValue(lines[y][x]);
+                }
             }
         }
-
-        map[1, 0] = 1;
-        map[1, 1] = 1;
-        map[1, 2] = 1;
-        map[1, 3] = 1;
-        map[5, 5] = 1;
-        map[6, 5] = 1;
-        map[7, 4] = 1;
 
         return map;
     }
