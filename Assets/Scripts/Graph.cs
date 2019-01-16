@@ -113,4 +113,11 @@ public class Graph : MonoBehaviour
         // diagonal steps cost 1.4, straight steps cost 1.
         return 1.4f * diagonalSteps + straightSteps;
     }
+
+    public int GetManhattanDistance(Node source, Node target)
+    {
+        int dx = Mathf.Abs(source.xIndex - target.xIndex);
+        int dy = Mathf.Abs(source.yIndex - target.yIndex);
+        return dx + dy;
+    }
 }
