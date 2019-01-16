@@ -121,7 +121,7 @@ public class Pathfinder : MonoBehaviour
 
     public IEnumerator SearchRoutine(float timeStep = 0.1f)
     {
-        float timeStart = Time.time;
+        float timeStart = Time.realtimeSinceStartup;
 
         yield return null;
 
@@ -181,7 +181,7 @@ public class Pathfinder : MonoBehaviour
 
         ShowDiagnostics(true, 0.5f);
 
-        Debug.Log("Pathfinder SearchRouting: elapse time = " + (Time.time - timeStart).ToString() + " seconds");
+        Debug.Log("Pathfinder SearchRouting: elapse time = " + (Time.realtimeSinceStartup - timeStart).ToString() + " seconds");
     }
 
     private void ShowDiagnostics(bool lerpColor = false, float lerpValue = 0.5f)
@@ -244,7 +244,7 @@ public class Pathfinder : MonoBehaviour
 
                     if (!m_frontierNodes.Contains(node.neighbors[i]))
                     {
-                        node.neighbors[i].priority = (int)node.neighbors[i].distanceTraveled;
+                        node.neighbors[i].priority = node.neighbors[i].distanceTraveled;
                         m_frontierNodes.Enqueue(node.neighbors[i]);
                     }
                 }
@@ -268,7 +268,7 @@ public class Pathfinder : MonoBehaviour
                     node.neighbors[i].previous = node;
                     if (m_graph != null)
                     {
-                        node.neighbors[i].priority = (int)m_graph.GetNodeDistance(node.neighbors[i], m_goalNode);
+                        node.neighbors[i].priority = m_graph.GetNodeDistance(node.neighbors[i], m_goalNode);
                     }
 
                     m_frontierNodes.Enqueue(node.neighbors[i]);
@@ -297,8 +297,8 @@ public class Pathfinder : MonoBehaviour
 
                     if (!m_frontierNodes.Contains(node.neighbors[i]) && m_graph != null)
                     {
-                        int distanceToGoal = (int)m_graph.GetNodeDistance(node.neighbors[i], m_goalNode);
-                        node.neighbors[i].priority = (int)node.neighbors[i].distanceTraveled + distanceToGoal;
+                        float distanceToGoal = m_graph.GetNodeDistance(node.neighbors[i], m_goalNode);
+                        node.neighbors[i].priority = node.neighbors[i].distanceTraveled + distanceToGoal;
 
                         m_frontierNodes.Enqueue(node.neighbors[i]);
                     }
@@ -306,6 +306,7 @@ public class Pathfinder : MonoBehaviour
             }
         }
     }
+
     List<Node> GetPathNodes(Node endNode)
     {
         List<Node> path = new List<Node>();
